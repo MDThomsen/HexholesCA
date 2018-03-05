@@ -4,7 +4,8 @@ class Hexholegrid:
     gridSize = 1000
 
     def __init__(self):
-        self.grid = [[states.Cell(i,j,self.grid) for i in range(self.gridSize)] for j in range(self.gridSize)]
+        #self.grid = [[states.Cell(i,j,self.grid) for i in range(self.gridSize)] for j in range(self.gridSize)]
+        pass
 
     def performIterations(self,iterations):
         if iterations == 0:
@@ -21,3 +22,5 @@ class Hexholegrid:
                 newgrid[i][j] = self.grid[i][j].coordinate(self.grid)
 
         self.grid = newgrid
+
+        pass

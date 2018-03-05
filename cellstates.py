@@ -1,4 +1,6 @@
 from abc import abstractmethod
+import random
+
 
 class MetaCellClass:
     @classmethod
@@ -10,112 +12,173 @@ class MetaCellClass:
             return False
         return True
 
-class Cell(metaclass=MetaCellClass):
+
+class Cell:
     x = 0
     y = 0
 
     _required_attrs = ['determineTransformation']
 
     @abstractmethod
-    def doIteration(self, grid):
+    def do_iteration(self, grid):
         while False:
             yield None
 
-    def __init__(self,x,y,grid,p1,p2,p3):
+    def __init__(self, x, y, grid, p1, p2, p3):
         self.x = x
         self.y = y
         self.grid = grid
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
-        northCoordinate = IndexUtility.north(x, y)
-        eastCoordinate = IndexUtility.east(x, y)
-        westCoordinate = IndexUtility.west(x, y)
-        southCoordinate = IndexUtility.south(x, y)
-        self.northCell = self.grid[northCoordinate[1]][northCoordinate[0]]
-        self.eastCell = self.grid[eastCoordinate[1]][eastCoordinate[0]]
-        self.westCell = self.grid[westCoordinate[1]][westCoordinate[0]]
-        self.southCell = self.grid[southCoordinate[1]][southCoordinate[0]]
+        index_utility = IndexUtility(self.grid)
+        north_coordinate = index_utility.north(self.x, self.y)
+        east_coordinate = index_utility.east(self.x, self.y)
+        west_coordinate = index_utility.west(self.x, self.y)
+        south_coordinate = index_utility.south(self.x, self.y)
+        self.northCell = self.grid[north_coordinate[1]][north_coordinate[0]]
+        self.eastCell = self.grid[east_coordinate[1]][east_coordinate[0]]
+        self.westCell = self.grid[west_coordinate[1]][west_coordinate[0]]
+        self.southCell = self.grid[south_coordinate[1]][south_coordinate[0]]
+
+    def north_is(self, celltype):
+        return type(self.northCell) is celltype
+
+    def south_is(self, celltype):
+        return type(self.southCell) is celltype
+
+    def west_is(self, celltype):
+        return type(self.westCell) is celltype
+
+    def east_is(self, celltype):
+        return type(self.eastCell) is celltype
+
 
 class FullCell(Cell):
-
-    def doIteration(self, grid):
+    def do_iteration(self, grid):
         pass
 
-    def _isF1Valid(self):
-        return (((isinstance(self.northCell,OnlyBCell) and isinstance(self.eastCell,OnlyBCell)) or (isinstance(self.northCell,EmptyCell) and isinstance(self.eastCell,EmptyCell))) \
-               and ((isinstance(self.southCell,OnlyACell) and isinstance(self.westCell,OnlyACell)) or (isinstance(self.southCell,EmptyCell) and isinstance(self.westCell,EmptyCell))))
+    # Co-ordination -4:
+    def _is_f1_valid(self):
+        return (
+            ((self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
+                self.north_is(EmptyCell) and self.east_is(EmptyCell)))
+            and ((self.south_is(OnlyACell) and self.west_is(OnlyACell)) or (
+                self.south_is(EmptyCell) and self.west_is(EmptyCell))))
 
-    def _isF21Valid(self,p3):
-        #IF ONE OF WHAT?
+    # Co-ordination -3:
+    def _is_f21_valid(self, p3):
+        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is (
+                    self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
+            and ((self.south_is(OnlyACell) and self.west_is(OnlyACell)) or (
+                        self.south_is(EmptyCell) and self.west_is(EmptyCell)))):
+            return random.random() < p3
 
-    def _isF22Valid(self,p3):
-        pass
+    def _is_f22_valid(self, p3):
+        if (not ((self.south_is(OnlyACell) or self.south_is(EmptyCell)) is (
+                self.west_is(OnlyACell) or self.west_is(EmptyCell)))
+            and ((self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
+                self.north_is(EmptyCell) and self.east_is(EmptyCell)))):
+            return random.random() < p3
 
-    def _isF31Valid(self,p2):
-        pass
+    # Co-ordination -2:
+    def _is_f31_valid(self, p2):
+        if (((self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
+              self.north_is(EmptyCell) and self.east_is(EmptyCell)))
+            and (self.south_is(FullCell) or self.south_is(OnlyBCell)) and (
+                self.west_is(FullCell) or self.west_is(OnlyBCell))):
+            return random.random() < p2
 
-    def _isF32Valid(self,p2):
-        pass
+    def _is_f32_valid(self, p2):
+        if (((self.south_is(OnlyBCell) and self.west_is(OnlyBCell)) or (
+                self.south_is(EmptyCell) and self.west_is(EmptyCell)))
+            and (self.north_is(FullCell) or self.north_is(OnlyBCell)) and (
+                self.east_is(FullCell) or self.east_is(OnlyBCell))):
+            return random.random() < p2
 
-    def _isF33Valid(self,p2):
-        pass
+    def _is_f33_valid(self, p2):
+        if (not ((self.north_is(OnlyACell) or self.north_is(EmptyCell)) is (
+                self.east_is(OnlyACell) or self.east_is(EmptyCell)))
+            and not ((self.south_is(OnlyBCell) or self.south_is(EmptyCell)) is (
+                self.west_is(OnlyBCell) or self.west_is(EmptyCell)))):
+            return random.random() < p2
 
+    # Co-ordination -1:
+    def _is_f41_valid(self, p1):
+        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is (
+                self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
+            and (self.south_is(FullCell) or self.south_is(OnlyBCell)) and (
+                self.west_is(FullCell) or self.west_is(OnlyBCell))):
+            return random.random() < p1
 
-    def _isF41Valid(self,p1):
-        pass
+    def _is_f42_valid(self, p1):
+        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is (
+                self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
+            and (self.south_is(FullCell) or self.south_is(OnlyBCell)) and (
+                self.west_is(FullCell) or self.west_is(OnlyBCell))):
+            return random.random() < p1
 
-    def _isF42Valid(self,p1):
-        pass
 
 class OnlyACell(Cell):
-    def doIteration(self, grid):
+    def do_iteration(self, grid):
         pass
 
-    def _isA1Valid(self):
-        pass
+    def _is_a1_valid(self):
+        return (self.south_is(OnlyACell) and self.west_is(OnlyACell)) or (
+            self.south_is(EmptyCell) and self.west_is(EmptyCell))
 
-    def _isA2Valid(self):
-        pass
+    def _is_a2_valid(self, p3):
+        if (not ((self.south_is(OnlyACell) or self.south_is(EmptyCell)) is (
+                    self.west_is(OnlyACell) or self.west_is(EmptyCell)))):
+            return random.random() < p3
 
-    def _isA3Valid(self):
-        pass
+    def _is_a3_valid(self, p2):
+        if ((self.south_is(FullCell) and self.west_is(FullCell)) or (
+                    self.south_is(OnlyBCell) and self.west_is(OnlyBCell))):
+            return random.random() < p2
 
 
 class OnlyBCell(Cell):
-    def doIteration(self, grid):
+    def do_iteration(self, grid):
         pass
 
-    def _isB1Valid(self):
-        pass
+    def _is_b1_valid(self):
+        return (self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
+            self.north_is(EmptyCell) and self.east_is(EmptyCell))
 
-    def _isB2Valid(self):
-        pass
+    def _is_b2_valid(self, p3):
+        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is (
+                    self.east_is(OnlyBCell) or self.east_is(EmptyCell)))):
+            return random.random() < p3
 
-    def _isB3Valid(self):
-        pass
+    def _is_b3_valid(self, p2):
+        if ((self.north_is(FullCell) and self.east_is(FullCell)) or (
+                    self.north_is(OnlyACell) and self.east_is(OnlyACell))):
+            return random.random() < p2
+
 
 class EmptyCell(Cell):
-    def doIteration(self, grid):
+    def do_iteration(self, grid):
         pass
 
+
 class IndexUtility:
-    def __init__(self,grid):
+    def __init__(self, grid):
         self.grid = grid
 
-    def north(self,x,y):
-        return self._calculateCoordinate(x, y, 0, 1)
+    def north(self, x, y):
+        return self._calculate_coordinate(x, y, 0, 1)
 
-    def south(self,x,y):
-        return self._calculateCoordinate(x, y, 0, -1)
+    def south(self, x, y):
+        return self._calculate_coordinate(x, y, 0, -1)
 
-    def west(self,x,y):
-        return self._calculateCoordinate(x, y, -1, 0)
+    def west(self, x, y):
+        return self._calculate_coordinate(x, y, -1, 0)
 
-    def east(self,x,y):
-        return self._calculateCoordinate(x, y, 1, 0)
+    def east(self, x, y):
+        return self._calculate_coordinate(x, y, 1, 0)
 
-    def _calculateCoordinate(self,x,y,xDir,yDir):
-        newX = (x + xDir) % len(self.grid)
-        newY = (y + yDir) % len(self.grid)
-        return (newX,newY)
+    def _calculate_coordinate(self, x, y, x_dir, y_dir):
+        new_x = (x + x_dir) % len(self.grid)
+        new_y = (y + y_dir) % len(self.grid)
+        return [new_x, new_y]
