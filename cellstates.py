@@ -6,29 +6,30 @@ class Cell:
     x = 0
     y = 0
 
-    _required_attrs = ['determineTransformation']
-
     @abstractmethod
     def do_iteration(self):
         while False:
             yield None
 
-    def __init__(self, x, y, grid, p1, p2, p3):
+    def __init__(self, x, y, p1, p2, p3, full_p, only_p):
         self.x = x
         self.y = y
-        self.grid = grid
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
-        index_utility = IndexUtility(self.grid)
-        north_coordinate = index_utility.north(self.x, self.y)
-        east_coordinate = index_utility.east(self.x, self.y)
-        west_coordinate = index_utility.west(self.x, self.y)
-        south_coordinate = index_utility.south(self.x, self.y)
-        self.northCell = self.grid[north_coordinate[1]][north_coordinate[0]]
-        self.eastCell = self.grid[east_coordinate[1]][east_coordinate[0]]
-        self.westCell = self.grid[west_coordinate[1]][west_coordinate[0]]
-        self.southCell = self.grid[south_coordinate[1]][south_coordinate[0]]
+        self.full_p = full_p
+        self.only_p = only_p
+
+    def initialize_neighbours(self, grid):
+        index_utility = IndexUtility()
+        north_coordinate = index_utility.north(grid, self.x, self.y)
+        east_coordinate = index_utility.east(grid, self.x, self.y)
+        west_coordinate = index_utility.west(grid, self.x, self.y)
+        south_coordinate = index_utility.south(grid, self.x, self.y)
+        self.northCell = grid[north_coordinate[1]][north_coordinate[0]]
+        self.eastCell = grid[east_coordinate[1]][east_coordinate[0]]
+        self.westCell = grid[west_coordinate[1]][west_coordinate[0]]
+        self.southCell = grid[south_coordinate[1]][south_coordinate[0]]
 
     def north_is(self, celltype):
         return type(self.northCell) is celltype
@@ -45,24 +46,44 @@ class Cell:
 
 class FullCell(Cell):
     def do_iteration(self):
-        if self._is_f1_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+        if self._should_transform():
+            if random.random() < 0.5:
+                return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+            else:
+                return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+        elif self._is_f1_valid():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f21_valid():
-            return OnlyBCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f22_valid():
-            return OnlyACell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f31_valid():
-            return OnlyACell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f32_valid():
-            return OnlyACell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f33_valid():
-            return OnlyACell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)  ##QUEUEUE???
+            if random.random() < 0.5:
+                return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+            else:
+                return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f41_valid():
-            return OnlyACell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         elif self._is_f42_valid():
-            return OnlyBCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         else:
             return self
+
+    # transform to onlyA or onlyB cell
+    def _should_transform(self):
+        return random.random() < self.only_p
 
     # Co-ordination -4:
     def _is_f1_valid(self):
@@ -127,14 +148,19 @@ class FullCell(Cell):
 
 class OnlyACell(Cell):
     def do_iteration(self):
-        if self._is_a1_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+        if self._should_transform():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+        elif self._is_a1_valid():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_a2_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_a3_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         else:
             return self
+
+    def _should_transform(self):
+        return random.random() < self.only_p
 
     def _is_a1_valid(self):
         return (self.south_is(OnlyACell) and self.west_is(OnlyACell)) or (
@@ -153,14 +179,19 @@ class OnlyACell(Cell):
 
 class OnlyBCell(Cell):
     def do_iteration(self):
-        if self._is_b1_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+        if self._should_transform():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+        elif self._is_b1_valid():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_b2_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_b3_valid():
-            return EmptyCell(self.x, self.y, self.grid, self.p1, self.p2, self.p3)
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         else:
             return self
+
+    def _should_transform(self):
+        return random.random() < self.only_p
 
     def _is_b1_valid(self):
         return (self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
@@ -183,22 +214,21 @@ class EmptyCell(Cell):
 
 
 class IndexUtility:
-    def __init__(self, grid):
-        self.grid = grid
 
-    def north(self, x, y):
-        return self._calculate_coordinate(x, y, 0, 1)
+    def north(self, grid, x, y):
+        return self._calculate_coordinate(grid, x, y, 0, 1)
 
-    def south(self, x, y):
-        return self._calculate_coordinate(x, y, 0, -1)
+    def south(self, grid, x, y):
+        return self._calculate_coordinate(grid, x, y, 0, -1)
 
-    def west(self, x, y):
-        return self._calculate_coordinate(x, y, -1, 0)
+    def west(self, grid, x, y):
+        return self._calculate_coordinate(grid, x, y, -1, 0)
 
-    def east(self, x, y):
-        return self._calculate_coordinate(x, y, 1, 0)
+    def east(self, grid, x, y):
+        return self._calculate_coordinate(grid, x, y, 1, 0)
 
-    def _calculate_coordinate(self, x, y, x_dir, y_dir):
-        new_x = (x + x_dir) % len(self.grid)
-        new_y = (y + y_dir) % len(self.grid)
+    @staticmethod
+    def _calculate_coordinate(grid, x, y, x_dir, y_dir):
+        new_x = (x + x_dir) % len(grid)
+        new_y = (y + y_dir) % len(grid)
         return [new_x, new_y]
