@@ -44,12 +44,7 @@ class Cell:
 
 class FullCell(Cell):
     def do_iteration(self):
-        if self._should_transform():
-            if random.random() < 0.5:
-                return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
-            else:
-                return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
-        elif self._is_f1_valid():
+        if self._is_f1_valid():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
 
         elif self._is_f21_valid():
@@ -76,12 +71,18 @@ class FullCell(Cell):
         elif self._is_f42_valid():
             return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
 
+        elif self._should_transform():
+            if random.random() < 0.5:
+                return OnlyACell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+            else:
+                return OnlyBCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+
         else:
             return self
 
     # transform to onlyA or onlyB cell
     def _should_transform(self):
-        return random.random() < self.only_p
+        return random.random() < self.full_p
 
     # Co-ordination -4:
     def _is_f1_valid(self):
@@ -146,13 +147,13 @@ class FullCell(Cell):
 
 class OnlyACell(Cell):
     def do_iteration(self):
-        if self._should_transform():
-            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
-        elif self._is_a1_valid():
+        if self._is_a1_valid():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_a2_valid():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_a3_valid():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+        elif self._should_transform():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         else:
             return self
@@ -177,13 +178,13 @@ class OnlyACell(Cell):
 
 class OnlyBCell(Cell):
     def do_iteration(self):
-        if self._should_transform():
-            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
-        elif self._is_b1_valid():
+        if self._is_b1_valid():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_b2_valid():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         elif self._is_b3_valid():
+            return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+        elif self._should_transform():
             return EmptyCell(self.x, self.y, self.p1, self.p2, self.p3, self.full_p, self.only_p)
         else:
             return self
@@ -214,10 +215,10 @@ class EmptyCell(Cell):
 class IndexUtility:
 
     def north(self, grid, x, y):
-        return self._calculate_coordinate(grid, x, y, 0, 1)
+        return self._calculate_coordinate(grid, x, y, 0, -1)
 
     def south(self, grid, x, y):
-        return self._calculate_coordinate(grid, x, y, 0, -1)
+        return self._calculate_coordinate(grid, x, y, 0, 1)
 
     def west(self, grid, x, y):
         return self._calculate_coordinate(grid, x, y, -1, 0)
