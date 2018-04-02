@@ -3,8 +3,6 @@ import random
 
 
 class Cell:
-    x = 0
-    y = 0
 
     @abstractmethod
     def do_iteration(self):

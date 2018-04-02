@@ -1,4 +1,4 @@
-import hexholegrid as hexholegrid
+import hexholegrid
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
@@ -17,7 +17,7 @@ class ResultFrame(tk.Frame):
         self.canvas_size = self.cell_side_length*len(grid)
         super(ResultFrame,self).__init__(parent,width=self.screen_width,height=self.screen_height)
 
-        #creates canvas based on grid
+        #Creates canvas based on grid. The canvas can be scrolled.
         canvas = Canvas(self,width=self.canvas_size,height=self.canvas_size,bg="#ddd",scrollregion=(0,0,self.canvas_size,self.canvas_size))
         hbar = Scrollbar(self, orient=HORIZONTAL)
         hbar.pack(side=BOTTOM, fill=X)
@@ -79,7 +79,7 @@ class WorkThread(threading.Thread):
     @asyncio.coroutine
     def do_iterations(self):
         self.hexholeGrid = hexholegrid.Hexholegrid(self.queue, self.p1, self.p2, self.p3, self.full_p, self.only_p)
-        self.hexholeGrid.performIterations(self.iterations)
+        self.hexholeGrid.perform_iterations(self.iterations)
         self.queue.put(("result", self.hexholeGrid.grid))
 
 class HexholeApp(tk.Frame):
@@ -148,15 +148,15 @@ class HexholeApp(tk.Frame):
         tk.Frame.__init__(self, parent)
         tk.Label(parent, text = "Number of iterations \n(Positive integer)").pack()
         tk.Entry(parent, textvariable = iterations_input).pack()
-        tk.Label(parent, text="Probability 1 \n(Decimal number 1.0 or below)").pack()
+        tk.Label(parent, text="Probability 1 \n(Positive decimal number 1.0 or below)").pack()
         tk.Entry(parent, textvariable = p1_input).pack()
-        tk.Label(parent, text="Probability 2 \n(Decimal number 1.0 or below)").pack()
+        tk.Label(parent, text="Probability 2 \n(Positive decimal number 1.0 or below)").pack()
         tk.Entry(parent, textvariable = p2_input).pack()
-        tk.Label(parent, text="Probability 3 \n(Decimal number 1.0 or below)").pack()
+        tk.Label(parent, text="Probability 3 \n(Positive decimal number 1.0 or below)").pack()
         tk.Entry(parent, textvariable = p3_input).pack()
-        tk.Label(parent, text="Probability Full to OnlyA/B \n(Decimal number 1.0 or below)").pack()
+        tk.Label(parent, text="Probability Full to OnlyA/B \n(Positive decimal number 1.0 or below)").pack()
         tk.Entry(parent, textvariable = full_input).pack()
-        tk.Label(parent, text="Probability OnlyA/B to Empty \n(Decimal number 1.0 or below)").pack()
+        tk.Label(parent, text="Probability OnlyA/B to Empty \n(Positive decimal number 1.0 or below)").pack()
         tk.Entry(parent, textvariable= only_input).pack()
         tk.Button(master=parent, text='Perform iterations', highlightbackground='#3E4149',
                   command=lambda: self.do_async_work(int(iterations_input.get()),float(p1_input.get()),float(p2_input.get()),float(p3_input.get()),float(full_input.get()),float(only_input.get()))).pack()
