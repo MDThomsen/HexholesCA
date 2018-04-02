@@ -1,7 +1,6 @@
 from abc import abstractmethod
 import random
 
-
 class Cell:
 
     @abstractmethod
@@ -87,24 +86,24 @@ class FullCell(Cell):
     # Co-ordination -4:
     def _is_f1_valid(self):
         return (
-            ((self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
-                self.north_is(EmptyCell) and self.east_is(EmptyCell)))
-            and ((self.south_is(OnlyACell) and self.west_is(OnlyACell)) or (
-                self.south_is(EmptyCell) and self.west_is(EmptyCell))))
+            ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) and
+             (self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
+            and ((self.south_is(OnlyACell) or self.south_is(EmptyCell)) and (
+                self.west_is(OnlyACell) or self.west_is(EmptyCell))))
 
     # Co-ordination -3:
     def _is_f21_valid(self):
-        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is (
-                    self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
-            and ((self.south_is(OnlyACell) and self.west_is(OnlyACell)) or (
-                        self.south_is(EmptyCell) and self.west_is(EmptyCell)))):
+        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is
+                     (self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
+            and ((self.south_is(OnlyACell) or self.south_is(EmptyCell)) and (
+                        self.west_is(OnlyACell) or self.west_is(EmptyCell)))):
             return random.random() < self.p3
 
     def _is_f22_valid(self):
         if (not ((self.south_is(OnlyACell) or self.south_is(EmptyCell)) is (
                     self.west_is(OnlyACell) or self.west_is(EmptyCell)))
-            and ((self.north_is(OnlyBCell) and self.east_is(OnlyBCell)) or (
-                        self.north_is(EmptyCell) and self.east_is(EmptyCell)))):
+            and ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) and (
+                        self.east_is(OnlyBCell) or self.east_is(EmptyCell)))):
             return random.random() < self.p3
 
     # Co-ordination -2:
@@ -138,10 +137,9 @@ class FullCell(Cell):
             return random.random() < self.p1
 
     def _is_f42_valid(self):
-        if (not ((self.north_is(OnlyBCell) or self.north_is(EmptyCell)) is (
-                    self.east_is(OnlyBCell) or self.east_is(EmptyCell)))
-            and (self.south_is(FullCell) or self.south_is(OnlyBCell)) and (
-                    self.west_is(FullCell) or self.west_is(OnlyBCell))):
+        if (not ((self.south_is(OnlyACell) or self.south_is(EmptyCell)) is (
+                    self.west_is(OnlyACell) or self.west_is(EmptyCell)))
+            and (self.north_is(FullCell) and self.east_is(FullCell))):
             return random.random() < self.p1
 
 
@@ -206,28 +204,26 @@ class OnlyBCell(Cell):
                     self.north_is(OnlyACell) and self.east_is(OnlyACell))):
             return random.random() < self.p2
 
-
 class EmptyCell(Cell):
     def do_iteration(self):
         return self
 
-
 class IndexUtility:
 
     def north(self, grid, x, y):
-        return self._calculate_coordinate(grid, x, y, 0, -1)
+        return self._calculate_indices(grid, x, y, 0, -1)
 
     def south(self, grid, x, y):
-        return self._calculate_coordinate(grid, x, y, 0, 1)
+        return self._calculate_indices(grid, x, y, 0, 1)
 
     def west(self, grid, x, y):
-        return self._calculate_coordinate(grid, x, y, -1, 0)
+        return self._calculate_indices(grid, x, y, -1, 0)
 
     def east(self, grid, x, y):
-        return self._calculate_coordinate(grid, x, y, 1, 0)
+        return self._calculate_indices(grid, x, y, 1, 0)
 
     @staticmethod
-    def _calculate_coordinate(grid, x, y, x_dir, y_dir):
+    def _calculate_indices(grid, x, y, x_dir, y_dir):
         new_x = (x + x_dir) % len(grid)
         new_y = (y + y_dir) % len(grid)
         return [new_x, new_y]
