@@ -1,7 +1,9 @@
 import hexholegrid
 import tkinter as tk
+import os
 from tkinter import *
 from tkinter import ttk
+from PIL import Image,ImageDraw
 import asyncio
 import threading
 import queue
@@ -16,6 +18,7 @@ class ResultFrame(tk.Frame):
         self.cell_side_length = 10
         self.canvas_size = self.cell_side_length*len(grid)
         super(ResultFrame,self).__init__(parent,width=self.screen_width,height=self.screen_height)
+        self.draw_and_save_result(grid)
 
         #Creates canvas based on grid. The canvas can be scrolled.
         canvas = Canvas(self,width=self.canvas_size,height=self.canvas_size,bg="#ddd",scrollregion=(0,0,self.canvas_size,self.canvas_size))
@@ -30,6 +33,7 @@ class ResultFrame(tk.Frame):
         canvas.pack(side=TOP,fill=BOTH,padx=1,pady=1)
         parent.update_idletasks()
         self.board(canvas,grid)
+        self.parent.after(5000, self.save_canvas(canvas))
 
     def board(self,view,grid):
         cols = len(grid)
@@ -60,6 +64,46 @@ class ResultFrame(tk.Frame):
                 view.itemconfig(rect, tags=(str(rowNumber), str(columnNumber)))
                 coordinate[(row, col)] = rect
         return coordinate
+
+    def draw_and_save_result(self,grid):
+        cols = len(grid)
+        rows = len(grid)
+
+        im = Image.new("RGB", (self.cell_side_length * cols,self.cell_side_length * rows))
+        draw = ImageDraw.Draw(im)
+
+        rowNumber = 0
+        for row in range(rows):
+            columnNumber = 0
+            rowNumber = rowNumber + 1
+            for col in range(cols):
+                columnNumber = columnNumber + 1
+
+                if(type(grid[row][col]) is cellstates.FullCell):
+                    fill = "green"
+                elif(type(grid[row][col]) is cellstates.OnlyACell):
+                    fill = "orange"
+                elif (type(grid[row][col]) is cellstates.OnlyBCell):
+                    fill = "yellow"
+                else:
+                    fill = "red"
+
+                draw.rectangle([col * self.cell_side_length,
+                                      row * self.cell_side_length,
+                                      (col + 1) * self.cell_side_length,
+                                      (row + 1) * self.cell_side_length],fill,"black")
+
+        filename = "hexholes_result"
+        im.save(filename+".png")
+
+        try:
+            os.remove(filename+".ps")
+        except OSError:
+            pass
+
+    def save_canvas(self, canvas):
+        canvas.update()
+        canvas.postscript(file="result.ps", colormode='color')
 
 class WorkThread(threading.Thread):
     def __init__(self, queue, iterations, p1, p2, p3, full_p, only_p):
