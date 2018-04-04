@@ -69,7 +69,7 @@ class ResultFrame(tk.Frame):
         cols = len(grid)
         rows = len(grid)
 
-        im = Image.new("RGB", (self.cell_side_length * cols,self.cell_side_length * rows))
+        im = Image.new("RGB", ((self.cell_side_length+5) * cols,self.cell_side_length * rows))
         draw = ImageDraw.Draw(im)
 
         rowNumber = 0
@@ -88,10 +88,15 @@ class ResultFrame(tk.Frame):
                 else:
                     fill = "red"
 
-                draw.rectangle([col * self.cell_side_length,
-                                      row * self.cell_side_length,
-                                      (col + 1) * self.cell_side_length,
-                                      (row + 1) * self.cell_side_length],fill,"black")
+                translation = rows*5-row*5
+                draw.polygon([col * self.cell_side_length + 5 + translation,
+                              row * self.cell_side_length,
+                              col * self.cell_side_length + translation,
+                              (row + 1) * self.cell_side_length,
+                              (col + 1) * self.cell_side_length + translation,
+                              (row + 1) * self.cell_side_length,
+                              (col + 1) * self.cell_side_length +5 +translation,
+                              row * self.cell_side_length],fill,"black")
 
         filename = "hexholes_result"
         im.save(filename+".png")
