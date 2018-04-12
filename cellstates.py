@@ -40,7 +40,6 @@ class Cell:
     def east_is(self, celltype):
         return type(self.eastCell) is celltype
 
-
 class FullCell(Cell):
     def do_iteration(self):
         if self._is_f1_valid():

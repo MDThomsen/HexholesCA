@@ -1,9 +1,7 @@
 import hexholegrid
 import tkinter as tk
-import os
 from tkinter import *
 from tkinter import ttk
-from PIL import Image,ImageDraw
 import asyncio
 import threading
 import queue
@@ -18,7 +16,6 @@ class ResultFrame(tk.Frame):
         self.cell_side_length = 10
         self.canvas_size = self.cell_side_length*len(grid)
         super(ResultFrame,self).__init__(parent,width=self.screen_width,height=self.screen_height)
-        self.draw_and_save_result(grid)
 
         #Creates canvas based on grid. The canvas can be scrolled.
         canvas = Canvas(self,width=self.canvas_size,height=self.canvas_size,bg="#ddd",scrollregion=(0,0,self.canvas_size,self.canvas_size))
@@ -32,19 +29,21 @@ class ResultFrame(tk.Frame):
         canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
         canvas.pack(side=TOP,fill=BOTH,padx=1,pady=1)
         parent.update_idletasks()
-        self.board(canvas,grid)
-        self.parent.after(5000, self.save_canvas(canvas))
+        self.draw_result(canvas,grid)
 
-    def board(self,view,grid):
+
+    def draw_result(self,view,grid):
+        cell_side_length = 10
         cols = len(grid)
         rows = len(grid)
-        coordinate = {}
+
         rowNumber = 0
         for row in range(rows):
             columnNumber = 0
             rowNumber = rowNumber + 1
             for col in range(cols):
                 columnNumber = columnNumber + 1
+                translation = rows * 5 - row * 5
 
                 if(type(grid[row][col]) is cellstates.FullCell):
                     fill = '#9bc146'
@@ -55,71 +54,27 @@ class ResultFrame(tk.Frame):
                 else:
                     fill = '#df1313'
 
-                rect = view.create_rectangle(col * self.cell_side_length,
-                                             row * self.cell_side_length,
-                                             (col + 1) * self.cell_side_length,
-                                             (row + 1) * self.cell_side_length,
-                                             fill=fill)
-                # Sets row, column
-                view.itemconfig(rect, tags=(str(rowNumber), str(columnNumber)))
-                coordinate[(row, col)] = rect
-        return coordinate
+                view.create_polygon([col * cell_side_length + 5 + translation,
+                                     row * cell_side_length,
+                                     col * cell_side_length + translation,
+                                     (row + 1) * cell_side_length,
+                                     (col + 1) * cell_side_length + translation,
+                                     (row + 1) * cell_side_length,
+                                     (col + 1) * cell_side_length + 5 + translation,
+                                     row * cell_side_length], fill=fill, outline="black",width=2)
 
-    def draw_and_save_result(self,grid):
-        cols = len(grid)
-        rows = len(grid)
-
-        im = Image.new("RGB", ((self.cell_side_length+5) * cols,self.cell_side_length * rows))
-        draw = ImageDraw.Draw(im)
-
-        rowNumber = 0
-        for row in range(rows):
-            columnNumber = 0
-            rowNumber = rowNumber + 1
-            for col in range(cols):
-                columnNumber = columnNumber + 1
-
-                if(type(grid[row][col]) is cellstates.FullCell):
-                    fill = "green"
-                elif(type(grid[row][col]) is cellstates.OnlyACell):
-                    fill = "orange"
-                elif (type(grid[row][col]) is cellstates.OnlyBCell):
-                    fill = "yellow"
-                else:
-                    fill = "red"
-
-                translation = rows*5-row*5
-                draw.polygon([col * self.cell_side_length + 5 + translation,
-                              row * self.cell_side_length,
-                              col * self.cell_side_length + translation,
-                              (row + 1) * self.cell_side_length,
-                              (col + 1) * self.cell_side_length + translation,
-                              (row + 1) * self.cell_side_length,
-                              (col + 1) * self.cell_side_length +5 +translation,
-                              row * self.cell_side_length],fill,"black")
-
-        filename = "hexholes_result"
-        im.save(filename+".png")
-
-        try:
-            os.remove(filename+".ps")
-        except OSError:
-            pass
-
-    def save_canvas(self, canvas):
-        canvas.update()
-        canvas.postscript(file="result.ps", colormode='color')
 
 class WorkThread(threading.Thread):
-    def __init__(self, queue, iterations, p1, p2, p3, full_p, only_p):
+    def __init__(self, queue, iterations, gridsize, p1, p2, p3, full_p, only_p):
+        self.queue = queue
         self.iterations = iterations
+        self.gridsize = gridsize
         self.p1 = p1
         self.p2 = p2
         self.p3 = p3
         self.full_p = full_p
         self.only_p = only_p
         self.loop = asyncio.get_event_loop()
-        self.queue = queue
         threading.Thread.__init__(self)
 
     def run(self):
@@ -127,18 +82,18 @@ class WorkThread(threading.Thread):
 
     @asyncio.coroutine
     def do_iterations(self):
-        self.hexholeGrid = hexholegrid.Hexholegrid(self.queue, self.p1, self.p2, self.p3, self.full_p, self.only_p)
+        self.hexholeGrid = hexholegrid.HexholeGrid(self.queue, self.p1, self.p2, self.p3, self.full_p, self.only_p, self.gridsize)
         self.hexholeGrid.perform_iterations(self.iterations)
         self.queue.put(("result", self.hexholeGrid.grid))
 
 class HexholeApp(tk.Frame):
-    def do_async_work(self,iterations,p1,p2,p3,full_p,only_p):
+    def do_async_work(self,iterations, gridsize, p1, p2, p3, full_p, only_p):
         self.parent.wm_state('iconic')
         self.results_toplevel = self.create_toplevel("Calculating hexholes")
         self.create_progress_label(self.results_toplevel,"Iterations completed {}/{}".format(0,iterations))
         self.start_progress_bar(iterations,self.results_toplevel)
         self.work_thread = None
-        self.work_thread = WorkThread(self.queue, iterations,p1,p2,p3,full_p,only_p)
+        self.work_thread = WorkThread(self.queue,iterations,gridsize,p1,p2,p3,full_p,only_p)
         self.parent.after(5000, self.check_queue())
         self.work_thread.start()
 
@@ -186,6 +141,7 @@ class HexholeApp(tk.Frame):
         ResultFrame(toplevel,grid).pack(side="top", fill="both", expand=True)
 
     def __init__(self, parent):
+        gridsize_input = StringVar()
         iterations_input = StringVar()
         p1_input = StringVar()
         p2_input = StringVar()
@@ -195,6 +151,8 @@ class HexholeApp(tk.Frame):
         self.queue = queue.Queue()
         self.parent = parent
         tk.Frame.__init__(self, parent)
+        tk.Label(parent, text = "Size of the grid \n (Positive integer").pack()
+        tk.Entry(parent, textvariable = gridsize_input).pack()
         tk.Label(parent, text = "Number of iterations \n(Positive integer)").pack()
         tk.Entry(parent, textvariable = iterations_input).pack()
         tk.Label(parent, text="Probability 1 \n(Positive decimal number 1.0 or below)").pack()
@@ -208,7 +166,7 @@ class HexholeApp(tk.Frame):
         tk.Label(parent, text="Probability OnlyA/B to Empty \n(Positive decimal number 1.0 or below)").pack()
         tk.Entry(parent, textvariable= only_input).pack()
         tk.Button(master=parent, text='Perform iterations', highlightbackground='#3E4149',
-                  command=lambda: self.do_async_work(int(iterations_input.get()),float(p1_input.get()),float(p2_input.get()),float(p3_input.get()),float(full_input.get()),float(only_input.get()))).pack()
+                  command=lambda: self.do_async_work(int(iterations_input.get()),int(gridsize_input.get()),float(p1_input.get()),float(p2_input.get()),float(p3_input.get()),float(full_input.get()),float(only_input.get()))).pack()
 
 
 if __name__ == "__main__":
