@@ -80,9 +80,9 @@ class HexholeGrid:
                               row * cell_side_length],fill,"black")
 
         path = os.path.dirname(os.path.realpath(__file__))+"/"
-        filename = "p1_"+str(self.p1)+"_p2_"+str(self.p2)+"_p3_"+str(self.p3)+"_FullToAB_"+str(self.full_p)+"_ABtoEmpty_"+str(self.only_p)
-        timestamp = "_" + str(datetime.datetime.now())
+        details = "p1_"+str(self.p1)+"_p2_"+str(self.p2)+"_p3_"+str(self.p3)+"_FullToAB_"+str(self.full_p)+"_ABtoEmpty_"+str(self.only_p)
+        timestamp = "_" + datetime.datetime.now().strftime("%d.%m.%Y_%H%M%S")
         extension = ".png"
-        fullname = path+filename+timestamp+extension
+        fullname = path+details+timestamp+extension
 
         im.save(fullname)
